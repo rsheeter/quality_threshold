@@ -127,6 +127,8 @@ def main():
 	print("<body>")
 	print("<pre>Dump families by quality group and lowest quality score</pre>")
 	print("<pre>Meant to help judge whether our High/Medium/Low thresholds are good</pre>")
+	print("<pre>Notably, it is likely some users will filter to only items in Quality.HIGH</pre>")
+	print("<pre>Produced by https://github.com/rsheeter/quality_threshold</pre>")
 	current_group = None
 	current_quality = 101.0  # so the first family prints a quality
 	for family in families:
