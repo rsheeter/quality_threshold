@@ -19,8 +19,8 @@ class Quality(enum.Enum):
 @dataclasses.dataclass(frozen=True)
 class Tag:
     family: str
-    name: str
     location: str
+    name: str
     weight: float
 
 
@@ -38,6 +38,7 @@ def min_quality_for(family: str) -> float:
     return min(t.weight for t in quality_tags_for(family))
 
 
+@functools.cache
 def quality_for(family: str) -> Quality:
     """Returns the quality of the font."""
     quality_tags = quality_tags_for(family)
@@ -79,15 +80,17 @@ def tags() -> Tuple[Tag, ...]:
     tag_files = (gf_dir() / "tags" / "all").rglob("*.csv")
     tags = set()
     for tag_file in tag_files:
-        if tag_file.name == "families_new.csv":
+        # The good stuff is now in families_new per dcrossland, ignore families.csv
+        if tag_file.name == "families.csv":
             continue
         with open(tag_file) as f:
             rdr = csv.reader(f)
             rows = tuple(r for r in rdr if len(r) > 0)
         for row in rows:
             row[-1] = float(row[-1])
+            #print(row)
             if len(row) == 3:
-                tag = Tag(row[0], row[1], None, row[2])
+                tag = Tag(row[0], None, row[1], row[2])
             elif len(row) == 4:
                 tag = Tag(*row)
             else:
@@ -106,6 +109,8 @@ def main():
         {t.family for t in tags() if quality_for(t.family) != Quality.UNKNOWN},
         key=lambda f: (-quality_for(f).value, -min_quality_for(f), f),
     )
+    if not families:
+        raise ValueError("No families have quality, seems sus!")
     print("<!DOCTYPE html>")
     print("<html>")
     print("<style>")
@@ -129,7 +134,16 @@ def main():
     print(
         "<pre>Notably, it is likely some users will filter to only items in Quality.HIGH</pre>"
     )
-    print("<pre>Produced by https://github.com/rsheeter/quality_threshold</pre>")
+    print("<pre>")
+    print("Produced by https://github.com/rsheeter/quality_threshold")
+    print()
+    count_by_quality = collections.defaultdict(int)
+    for family in families:
+        count_by_quality[quality_for(family)] += 1
+
+    for quality in Quality:
+        print(f"{count_by_quality[quality]} rated {quality}")
+    print("</pre>")
     current_group = None
     current_quality = 101.0  # so the first family prints a quality
     for family in families:
