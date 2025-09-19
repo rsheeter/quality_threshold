@@ -81,6 +81,7 @@ def tags() -> Tuple[Tag, ...]:
     tags = set()
     for tag_file in tag_files:
         # The good stuff is now in families_new per dcrossland, ignore families.csv
+        # After https://github.com/google/fonts/pull/9863 remove this
         if tag_file.name == "families.csv":
             continue
         with open(tag_file) as f:
